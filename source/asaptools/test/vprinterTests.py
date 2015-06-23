@@ -1,8 +1,10 @@
 """
-Created on Feb 26, 2015
+Verbose Printer (VPrinter) unit tests
 
-@author: Kevin Paul <kpaul@ucar.edu>
+Copyright 2015, University Corporation for Atmospheric Research
+See the LICENSE.txt file for details
 """
+
 import unittest
 import sys
 

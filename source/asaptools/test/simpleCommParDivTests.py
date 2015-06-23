@@ -1,18 +1,18 @@
 """
 Parallel Tests with communicator division for the SimpleComm class
 
-_______________________________________________________________________________
-Created on Feb 4, 2015
-
-@author: Kevin Paul <kpaul@ucar.edu>
+Copyright 2015, University Corporation for Atmospheric Research
+See the LICENSE.txt file for details
 """
+
 import unittest
+from os import linesep as eol
+
+from mpi4py import MPI
+MPI_COMM_WORLD = MPI.COMM_WORLD
 
 from asaptools import simplecomm
 from asaptools.partition import EqualStride, Duplicate
-from os import linesep as eol
-from mpi4py import MPI
-MPI_COMM_WORLD = MPI.COMM_WORLD
 
 
 def test_info_msg(rank, size, name, data, actual, expected):

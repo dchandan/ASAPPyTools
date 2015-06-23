@@ -6,19 +6,19 @@ same as the 1-rank parallel behavior.  If the 'Par' test suite passes with
 various communicator sizes (1, 2, ...), then this suite should be run to make
 sure that serial communication behaves consistently.
 
-_______________________________________________________________________________
-Created on Feb 17, 2015
-
-@author: Kevin Paul <kpaul@ucar.edu>
+Copyright 2015, University Corporation for Atmospheric Research
+See the LICENSE.txt file for details
 """
+
 import unittest
+from os import linesep
+
 import numpy as np
+from mpi4py import MPI
+MPI_COMM_WORLD = MPI.COMM_WORLD
 
 from asaptools import simplecomm
 from asaptools.partition import EqualStride, Duplicate
-from os import linesep
-from mpi4py import MPI
-MPI_COMM_WORLD = MPI.COMM_WORLD
 
 
 def test_info_msg(name, data, sresult, presult):

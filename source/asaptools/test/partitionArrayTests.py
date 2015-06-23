@@ -1,14 +1,16 @@
 """
 These are the unit tests for the partition module functions
-_______________________________________________________________________________
-Created on Feb 4, 2015
 
-@author: Kevin Paul <kpaul@ucar.edu>
+Copyright 2015, University Corporation for Atmospheric Research
+See the LICENSE.txt file for details
 """
+
 import unittest
-from asaptools import partition
-import numpy
 from os import linesep
+
+import numpy
+
+from asaptools import partition
 
 
 def test_info_msg(name, data, index, size, actual, expected):

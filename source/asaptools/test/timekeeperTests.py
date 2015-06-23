@@ -1,13 +1,11 @@
 """
 Unit tests (serial only) for the TimeKeeper class
 
------------------------
-Created on May 31, 2014
-
-@author: Kevin Paul <kpaul@ucar.edu>
+Copyright 2015, University Corporation for Atmospheric Research
+See the LICENSE.txt file for details
 """
-import unittest
 
+import unittest
 from time import sleep
 from asaptools import timekeeper
 
