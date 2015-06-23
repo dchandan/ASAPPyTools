@@ -37,9 +37,9 @@ __ALIASES__ = {'year': 'years',
 
 
 #==============================================================================
-# __alias_to_unit - Helper function to map unit aliases to standard unit names
+# _alias_to_unit - Helper function to map unit aliases to standard unit names
 #==============================================================================
-def __alias_to_unit(alias):
+def _alias_to_unit(alias):
     """
     Map a unit alias to a standard unit string
 
@@ -63,13 +63,14 @@ def __alias_to_unit(alias):
     elif alias in __ALIASES__:
         return __ALIASES__[alias]
     else:
-        err_msg = "Unrecognized unit name \"" + unit + "\""
+        err_msg = "Unrecognized unit name \"" + alias + "\""
+        raise ValueError(err_msg)
 
 
 #==============================================================================
-# __unit_to_index - Helper function to map unit names to tuple indices
+# _unit_to_index - Helper function to map unit names to tuple indices
 #==============================================================================
-def __unit_to_index(alias):
+def _unit_to_index(alias):
     """
     Map a unit string to a date-time tuple index
 
@@ -86,13 +87,13 @@ def __unit_to_index(alias):
         raise TypeError(err_msg)
 
     # Map unit string to index
-    return __INDICES__.index(__alias_to_unit(alias))
+    return __INDICES__.index(_alias_to_unit(alias))
 
 
 #==============================================================================
-# __index_to_unit - Helper function to map date-time tuple index to unit name
+# _index_to_unit - Helper function to map date-time tuple index to unit name
 #==============================================================================
-def __index_to_unit(index):
+def _index_to_unit(index):
     """
     Map an integer date-time tuple index to a standard unit name
 
@@ -136,5 +137,6 @@ class CFDateTimeDelta(object):
         Constructor
 
         Keyword Arguments:
-            kwargs: Can be 
+            kwargs: Can be any dictionary of unit-named parameters or
+                a date-time tuple
         """
