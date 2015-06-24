@@ -4,16 +4,8 @@ A module containing CF-Convention calendars
 Copyright 2015, University Corporation for Atmospheric Research
 See the LICENSE.txt file for details
 """
-from __builtin__ import int
 
-# Names of all defined calendars
-__CALENDARS__ = ['gregorian', 'standard',
-                 'proleptic_gregorian',
-                 'noleap', '365_day',
-                 'all_leap', '366_day',
-                 '360_day',
-                 'julian',
-                 'none']
+import abc
 
 
 #==============================================================================
@@ -39,18 +31,90 @@ def create_calendar(name="standard", **kwargs):
         err_msg = "Name must be given as a string"
         raise TypeError(err_msg)
 
-    return CFCalendar(name=name, **kwargs)
-    #     err_msg = "Unrecognized calendar name " + name
-    #     raise ValueError(err_msg)
+    # Return the right kind of CFCalendar
+    if name in ['gregorian', 'standard']:
+        return CFCalendarStandard()
+    elif name == 'proleptic_gregorian':
+        return CFCalendarProlepticGregorian()
+    elif name in ['noleap', '365_day']:
+        return CFCalendar365Day()
+    elif name in ['all_leap', '366_day']:
+        return CFCalendar366Day()
+    elif name == '360_day':
+        return CFCalendar360Day()
+    elif name == 'julian':
+        return CFCalendarJulian()
+    elif name == 'none':
+        return CFCalendarNone()
+    else:
+        return CFCalendar(name=name, **kwargs)
+
+
+#==============================================================================
+# CFCalendarAbstract - Abstract Base Class for all CFCalendars
+#==============================================================================
+class CFCalendarAbstract(object):
+
+    """
+    An abstract base class for all CFCalendars
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def is_leap_year(self, year):
+        """
+        Check if a given year is a leap year
+
+        Parameters:
+            year (int): The year to check if it is a leap year
+
+        Returns:
+            bool: True, if 'year' is a leap year.  False, otherwise.
+        """
+
+        # Check type
+        if not isinstance(year, int):
+            err_msg = "Year must be supplied as an int"
+            raise TypeError(err_msg)
+
+    @abc.abstractmethod
+    def days_in_month(self, month, year=None):
+        """
+        Return the number of days in the given month (and year, if given)
+
+        Parameters:
+            month (int): The integer month in question (1 to 12)
+
+        Keyword Arguments:
+            year (int): The year in which the month in question occurs.
+                If 'None', then ignore the effect of leap years.
+
+        Returns:
+            int: The number of days in the given month/year combination
+        """
+
+        # Check types
+        if not isinstance(month, int):
+            err_msg = "Month must be given as an int"
+            raise TypeError(err_msg)
+        if year and not isinstance(year, int):
+            err_msg = "Year must be given as an int or None"
+            raise TypeError(err_msg)
+
+        # Check values
+        if month < 1 or month > 12:
+            err_msg = "Month must be given as an int from 1 to 12"
+            raise ValueError(err_msg)
 
 
 #==============================================================================
 # CFCalendar - CFCalendar Base Class
 #==============================================================================
-class CFCalendar(object):
+class CFCalendar(CFCalendarAbstract):
 
     """
-    Basic calendar class
+    User-Defined calendar class
 
     The base class of the CFCalendar hierarchy represents the most generic
     kind of calendar in the CF Conventions: the user-defined calendar.
@@ -123,16 +187,125 @@ class CFCalendar(object):
             bool: True, if 'year' is a leap year.  False, otherwise.
         """
 
-        # Check type
-        if not isinstance(year, int):
-            err_msg = "Year must be supplied as an int"
-            raise TypeError(err_msg)
+        # Call abstract base class for type and value checking
+        CFCalendarAbstract.is_leap_year(self, year)
 
         # Check if there are leap years and if year is a leap year
         if self._leap_year and (year - self._leap_year) % 4 == 0:
             return True
         else:
             return False
+
+    def days_in_month(self, month, year=None):
+        """
+        Return the number of days in the given month (and year, if given)
+
+        Parameters:
+            month (int): The integer month in question (1 to 12)
+
+        Keyword Arguments:
+            year (int): The year in which the month in question occurs.
+                If 'None', then ignore the effect of leap years.
+
+        Returns:
+            int: The number of days in the given month/year combination
+        """
+
+        # Call abstract base class for type and value checking
+        CFCalendarAbstract.days_in_month(self, month, year)
+
+        # Return number of days in month
+        if year and self.is_leap_year(year) and month == self._leap_month:
+            return self._month_lengths[month - 1] + 1
+        else:
+            return self._month_lengths[month - 1]
+
+
+#==============================================================================
+# CFCalendarNone
+#==============================================================================
+class CFCalendarNone(CFCalendar):
+
+    """
+    Calendar Class with zero days in every month, no leap years, etc.
+
+    This calendar effectively says that every day is the same.
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(CFCalendar, self).__init__("none", month_lengths=[0] * 12)
+
+
+#==============================================================================
+# CFCalendar360Day
+#==============================================================================
+class CFCalendar360Day(CFCalendar):
+
+    """
+    Calendar Class with every year having 12 30-day months
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(CFCalendar, self).__init__("360_day", month_lengths=[30] * 12)
+
+
+#==============================================================================
+# CFCalendar365Day
+#==============================================================================
+class CFCalendar365Day(CFCalendar):
+
+    """
+    Gregorian-like Calendar Class with no leap years (365 days)
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(CFCalendar, self).__init__(
+            "365_day",
+            month_lengths=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+
+
+#==============================================================================
+# CFCalendar366Day
+#==============================================================================
+class CFCalendar366Day(CFCalendar):
+
+    """
+    Gregorian-like Calendar Class with every year a leap year (366 days)
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(CFCalendar, self).__init__(
+            "366_day",
+            month_lengths=[31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+
+    def is_leap_year(self, year):
+        """
+        Check if a given year is a leap year
+
+        Parameters:
+            year (int): The year to check if it is a leap year
+
+        Returns:
+            bool: True, if 'year' is a leap year.  False, otherwise.
+        """
+
+        # Call abstract base class for type and value checking
+        CFCalendarAbstract.is_leap_year(self, year)
+
+        # Every year is a leap year
+        return True
 
     def days_in_month(self, month, year=None):
         """
@@ -149,21 +322,109 @@ class CFCalendar(object):
             int: The number of days in the given month/year combination
         """
 
-        # Check types
-        if not isinstance(month, int):
-            err_msg = "Month must be given as an int"
-            raise TypeError(err_msg)
-        if year and not isinstance(year, int):
-            err_msg = "Year must be given as an int or None"
-            raise TypeError(err_msg)
-
-        # Check values
-        if month < 1 or month > 12:
-            err_msg = "Month must be given as an int from 1 to 12"
-            raise ValueError(err_msg)
+        # Call abstract base class for type and value checking
+        CFCalendarAbstract.days_in_month(self, month, year)
 
         # Return number of days in month
-        if year and self.is_leap_year(year) and month == self._leap_month:
-            return self._month_lengths[month - 1] + 1
+        return self._month_lengths[month - 1]
+
+
+#==============================================================================
+# CFCalendarJulian
+#==============================================================================
+class CFCalendarJulian(CFCalendar):
+
+    """
+    Julian Calendar Class
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(CFCalendar, self).__init__(
+            "julian",
+            month_lengths=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+            leap_year=0, leap_month=2)
+
+
+#==============================================================================
+# CFCalendarProlepticGregorian
+#==============================================================================
+class CFCalendarProlepticGregorian(CFCalendar):
+
+    """
+    Proleptic Gregorian Calendar Class
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(CFCalendar, self).__init__(
+            "proleptic_gregorian",
+            month_lengths=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+            leap_year=0, leap_month=2)
+
+    def is_leap_year(self, year):
+        """
+        Check if a given year is a leap year
+
+        Parameters:
+            year (int): The year to check if it is a leap year
+
+        Returns:
+            bool: True, if 'year' is a leap year.  False, otherwise.
+        """
+
+        # Call abstract base class for type and value checking
+        CFCalendarAbstract.is_leap_year(self, year)
+
+        # Gregorian leap years are as follows:
+        # 1. The year must be divisible by 4 but not 100, or
+        # 2. The year must be divisible by 400
+        condition_1 = year % 4 == 0 and not year % 100 == 0
+        condition_2 = year % 400 == 0
+        if condition_1 or condition_2:
+            return True
         else:
-            return self._month_lengths[month - 1]
+            return False
+
+
+#==============================================================================
+# CFCalendarStandard
+#==============================================================================
+class CFCalendarStandard(CFCalendar):
+
+    """
+    Mixed Julian/Gregorian Calendar Class
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(CFCalendar, self).__init__(
+            "standard",
+            month_lengths=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+            leap_year=0, leap_month=2)
+
+    def is_leap_year(self, year):
+        """
+        Check if a given year is a leap year
+
+        Parameters:
+            year (int): The year to check if it is a leap year
+
+        Returns:
+            bool: True, if 'year' is a leap year.  False, otherwise.
+        """
+
+        # Call abstract base class for type and value checking
+        CFCalendarAbstract.is_leap_year(self, year)
+
+        # If year < 1582, then use the Julian rule, otherwise Gregorian
+        if year < 1582:
+            return CFCalendarJulian.is_leap_year(self, year)
+        else:
+            return CFCalendarProlepticGregorian.is_leap_year(self, year)
