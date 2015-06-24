@@ -14,12 +14,12 @@ class CFTimeTests(unittest.TestCase):
 
     def testAliasToUnit(self):
         for ualias, unit in cftime.__ALIASES__.items():
-            self.assertEqual(cftime.__alias_to_unit__(ualias),
+            self.assertEqual(cftime.alias_to_unit(ualias),
                              unit, "Failed to map alias " + ualias +
                              " to " + unit)
-        self.assertRaises(ValueError, cftime.__alias_to_unit__,
+        self.assertRaises(ValueError, cftime.alias_to_unit,
                           'secondi')
-        self.assertRaises(ValueError, cftime.__alias_to_unit__,
+        self.assertRaises(ValueError, cftime.alias_to_unit,
                           'y')
 
     def testUnitToIndex(self):

@@ -37,9 +37,9 @@ __ALIASES__ = {'year': 'years',
 
 
 #==============================================================================
-# __alias_to_unit__ - Helper function to map unit aliases to standard unit names
+# alias_to_unit - Helper function to map unit aliases to standard unit names
 #==============================================================================
-def __alias_to_unit__(ualias):
+def alias_to_unit(ualias):
     """
     Map a unit alias to a standard unit string
 
@@ -87,7 +87,7 @@ def __unit_to_index__(ualias):
         raise TypeError(err_msg)
 
     # Map unit string to index
-    return __INDICES__.index(__alias_to_unit__(ualias))
+    return __INDICES__.index(alias_to_unit(ualias))
 
 
 #==============================================================================
