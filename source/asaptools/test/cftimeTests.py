@@ -7,79 +7,124 @@ See LICENSE.txt for details
 
 import unittest
 
-from asaptools import cftime
+from asaptools.cftime import cftime
 
 
 class CFTimeTests(unittest.TestCase):
 
     def testAliasToUnit(self):
-        u = cftime._alias_to_unit('secs')
-        self.assertEqual(u, 'seconds',
-                         'Failed to map alias')
-        u = cftime._alias_to_unit('hour')
-        self.assertEqual(u, 'hours',
-                         'Failed to map alias')
-        u = cftime._alias_to_unit('min')
-        self.assertEqual(u, 'minutes',
-                         'Failed to map alias')
-        u = cftime._alias_to_unit('yrs')
-        self.assertEqual(u, 'years',
-                         'Failed to map alias')
-        self.assertRaises(ValueError,
-                          cftime._alias_to_unit,
+        for ualias, unit in cftime.__ALIASES__.items():
+            self.assertEqual(cftime.__alias_to_unit__(ualias),
+                             unit, "Failed to map alias " + ualias +
+                             " to " + unit)
+        self.assertRaises(ValueError, cftime.__alias_to_unit__,
                           'secondi')
-        self.assertRaises(ValueError,
-                          cftime._alias_to_unit,
+        self.assertRaises(ValueError, cftime.__alias_to_unit__,
                           'y')
 
     def testUnitToIndex(self):
-        u = cftime._unit_to_index('yrs')
-        self.assertEqual(u, 0,
-                         'Failed to find index')
-        u = cftime._unit_to_index('mos')
-        self.assertEqual(u, 1,
-                         'Failed to find index')
-        u = cftime._unit_to_index('d')
-        self.assertEqual(u, 2,
-                         'Failed to find index')
-        u = cftime._unit_to_index('h')
-        self.assertEqual(u, 3,
-                         'Failed to find index')
-        u = cftime._unit_to_index('min')
-        self.assertEqual(u, 4,
-                         'Failed to find index')
-        u = cftime._unit_to_index('s')
-        self.assertEqual(u, 5,
-                         'Failed to find index')
-        self.assertRaises(ValueError,
-                          cftime._unit_to_index,
+        for i in range(len(cftime.__INDICES__)):
+            unit = cftime.__INDICES__[i]
+            self.assertEqual(cftime.__unit_to_index__(unit), i,
+                             "Failed to find index of unit " + unit)
+        self.assertRaises(ValueError, cftime.__unit_to_index__,
                           'y')
+        self.assertRaises(ValueError, cftime.__unit_to_index__,
+                          'x')
 
     def testIndexToUnit(self):
-        u = cftime._index_to_unit(0)
-        self.assertEqual(u, 'years',
-                         'Failed to map index')
-        u = cftime._index_to_unit(1)
-        self.assertEqual(u, 'months',
-                         'Failed to map index')
-        u = cftime._index_to_unit(2)
-        self.assertEqual(u, 'days',
-                         'Failed to map index')
-        u = cftime._index_to_unit(3)
-        self.assertEqual(u, 'hours',
-                         'Failed to map index')
-        u = cftime._index_to_unit(4)
-        self.assertEqual(u, 'minutes',
-                         'Failed to map index')
-        u = cftime._index_to_unit(5)
-        self.assertEqual(u, 'seconds',
-                         'Failed to map index')
-        self.assertRaises(ValueError,
-                          cftime._index_to_unit,
-                          -2)
-        self.assertRaises(ValueError,
-                          cftime._index_to_unit,
-                          7)
+        for i in range(len(cftime.__INDICES__)):
+            self.assertEqual(cftime.__index_to_unit__(i),
+                             cftime.__INDICES__[i],
+                             'Failed to map index ' + str(i))
+        self.assertRaises(IndexError, cftime.__index_to_unit__, -2)
+        self.assertRaises(IndexError, cftime.__index_to_unit__, 7)
+
+    def testIsDTTuple(self):
+        arg = [1, 2, 3, 4, 5, 6]
+        self.assertTrue(cftime.__is_dttuple__(arg),
+                        "Failed to interpret date-time tuple " + str(arg))
+        arg = [1, 2, 3, 4, 5, 6.8]
+        self.assertTrue(cftime.__is_dttuple__(arg),
+                        "Failed to interpret date-time tuple " + str(arg))
+        arg = [1, 2, 3L, 4, 5, 6.8]
+        self.assertTrue(cftime.__is_dttuple__(arg),
+                        "Failed to interpret date-time tuple " + str(arg))
+        arg = (1, 2, 3L, 4, 5, 6.8)
+        self.assertTrue(cftime.__is_dttuple__(arg),
+                        "Failed to interpret date-time tuple " + str(arg))
+        arg = [1, 2, 3, 4]
+        self.assertFalse(cftime.__is_dttuple__(arg),
+                         "Failed to interpret date-time tuple " + str(arg))
+        arg = [1, 2, 3, 4, 'a', 0L]
+        self.assertFalse(cftime.__is_dttuple__(arg),
+                         "Failed to interpret date-time tuple " + str(arg))
+        arg = "123456"
+        self.assertFalse(cftime.__is_dttuple__(arg),
+                         "Failed to interpret date-time tuple " + str(arg))
+
+    def testInitCFDateTimeDeltaParams(self):
+        params = (1, 2L, 3, 4, 5, 6.2)
+        obj = cftime.CFDateTimeDelta(*params)
+        self.assertTupleEqual(obj._dttuple, params,
+                              "Failed to construct CFDatTimeDelta")
+
+    def testInitCFDateTimeDeltaTuple(self):
+        params = (1, 2L, 3, 4, 5, 6.2)
+        obj = cftime.CFDateTimeDelta(params)
+        self.assertTupleEqual(obj._dttuple, params,
+                              "Failed to construct CFDatTimeDelta")
+
+    def testInitCFDateTimeDeltaList(self):
+        params = (1, 2L, 3, 4, 5, 6.2)
+        obj = cftime.CFDateTimeDelta(list(params))
+        self.assertTupleEqual(obj._dttuple, params,
+                              "Failed to construct CFDatTimeDelta")
+
+    def testCFDateTimeDeltaAdd(self):
+        dtd1 = cftime.CFDateTimeDelta([3, 3, 3, 3, 3, 3])
+        dtd2 = cftime.CFDateTimeDelta([2, 2, 2, 2, 2, 2])
+        result = dtd1 + dtd2
+        expected = (5, 5, 5, 5, 5, 5)
+        self.assertTupleEqual(result._dttuple, expected,
+                              "CFDateTimeDelta addition failed")
+
+    def testCFDateTimeDeltaSum(self):
+        dtd1 = cftime.CFDateTimeDelta([3, 3, 3, 3, 3, 3])
+        dtd2 = cftime.CFDateTimeDelta([2, 2, 2, 2, 2, 2])
+        dtd3 = cftime.CFDateTimeDelta([1, 1, 1, 1, 1, 1])
+        result = sum([dtd1, dtd2, dtd3])
+        expected = (6, 6, 6, 6, 6, 6)
+        self.assertTupleEqual(result._dttuple, expected,
+                              "CFDateTimeDelta sum failed")
+
+    def testCFDateTimeDeltaIAdd(self):
+        dtd = cftime.CFDateTimeDelta([3, 3, 3, 3, 3, 3])
+        result = cftime.CFDateTimeDelta([2, 2, 2, 2, 2, 2])
+        result += dtd
+        expected = (5, 5, 5, 5, 5, 5)
+        self.assertTupleEqual(result._dttuple, expected,
+                              "CFDateTimeDelta addition assignment failed")
+
+    def testCFDateTimeDeltaSub(self):
+        dtd1 = cftime.CFDateTimeDelta([3, 3, 3, 3, 3, 3])
+        dtd2 = cftime.CFDateTimeDelta([2, 2, 2, 2, 2, 2])
+        result = dtd1 - dtd2
+        expected = (1, 1, 1, 1, 1, 1)
+        self.assertTupleEqual(result._dttuple, expected,
+                              "CFDateTimeDelta subtraction failed")
+        result = dtd2 - dtd1
+        expected = (-1, -1, -1, -1, -1, -1)
+        self.assertTupleEqual(result._dttuple, expected,
+                              "CFDateTimeDelta subtraction failed")
+
+    def testCFDateTimeDeltaISub(self):
+        dtd = cftime.CFDateTimeDelta([3, 3, 3, 3, 3, 3])
+        result = cftime.CFDateTimeDelta([2, 2, 2, 2, 2, 2])
+        result -= dtd
+        expected = (-1, -1, -1, -1, -1, -1)
+        self.assertTupleEqual(result._dttuple, expected,
+                              "CFDateTimeDelta subtraction assignment failed")
 
 
 if __name__ == "__main__":
